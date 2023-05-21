@@ -51,3 +51,5 @@ The script is run from the command line, and takes the pathname of the corrupted
 6. After a few seconds, the script will report that the workbook has been fixed.
 7. Deactivate the virtual environment by running the command:
     - `deactivate`
+
+Wrap this in a shell script and you'll distill this process down to a single command.
