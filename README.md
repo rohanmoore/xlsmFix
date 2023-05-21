@@ -23,7 +23,7 @@ Registration is free. You'll need a Directory (I think you'll find one set up by
 3. Select App Registrations and New Registration.
 4. Give your app any name you like the sound of, and select the 'Single tenant' account type.
 5. Select platform 'Web' and enter the redirect URI http://localhost:8080, and then click Register.
-6. Select Authentication from the left-hand panel for your new app, an put a tick in the boxes for Access tokens and ID tokens, and click Save.
+6. Select Authentication from the left-hand panel for your new app, and put a tick in the boxes for Access tokens and ID tokens, and click Save.
 7. Select Certificates & secrets from the left-hand mneu, choose Client Secrets, and New Client Secret. Give the secret a name and an expiry date, click Add, and note the ID.
 8. Select API permissions from the left-hand menu, and add the following permissions, of type Delegated:
     - Files.ReadWrite.All
