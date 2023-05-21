@@ -13,24 +13,14 @@ import requests
 redirect_uri = "http://localhost:8080"
 authority_url = f"https://login.microsoftonline.com/{tenant_id}"
 scopes = ["https://graph.microsoft.com/.default"]
-total_steps = 4
 
-def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-    """
+# Initialise progress bar with four steps
+total_steps = 4
+def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = '\r')
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end='\r')
     # Print New Line on Complete
     if iteration == total:
         print()
@@ -46,7 +36,7 @@ else:
 
 file_name = os.path.basename(local_file_path)
 
-# Create a confidential client application
+# Initialise client app
 app = msal.ConfidentialClientApplication(
     client_id,
     authority=authority_url,
@@ -85,6 +75,7 @@ if not result:
         def log_message(self, format, *args):
             return
 
+
     server = HTTPServer(('localhost', 8080), Handler)
     thread = Thread(target=server.handle_request)
     thread.start()
@@ -96,7 +87,7 @@ if not result:
         result = app.acquire_token_by_auth_code_flow(flow, params)
     server.server_close()
 
-    print_progress_bar(1, total_steps, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    print_progress_bar(1, total_steps, prefix='Progress:', suffix='Complete', length=50)
 
 if "access_token" in result:
     # Microsoft Graph API endpoints
@@ -106,9 +97,9 @@ if "access_token" in result:
     with open(local_file_path, "rb") as file:
         headers = {"Authorization": "Bearer " + result['access_token'], "Content-Type": "application/octet-stream"}
         upload_response = requests.put(upload_url, headers=headers, data=file)
-        #print("File uploaded successfully.")
+        # print("File uploaded successfully.")
         uploaded_file_id = upload_response.json().get('id')
-        print_progress_bar(2, total_steps, prefix = 'Progress:', suffix = 'Complete', length = 50)
+        print_progress_bar(2, total_steps, prefix='Progress:', suffix='Complete', length=50)
 
     # Get the ID of the first worksheet
     worksheet_url = f"https://graph.microsoft.com/v1.0/me/drive/items/{uploaded_file_id}/workbook/worksheets"
@@ -118,25 +109,27 @@ if "access_token" in result:
     worksheet_data = response.json()
     if 'value' in worksheet_data and len(worksheet_data['value']) > 0:
         worksheet_id = worksheet_data['value'][0]['id']
-        #print(f"First worksheet ID: {worksheet_id}")
+        # print(f"First worksheet ID: {worksheet_id}")
     else:
         print("No worksheets found.")
         print(worksheet_data)
-        sys.exit(1)  # or handle the error as you prefer
+        sys.exit(1)
 
-    # Update a cell in the worksheet
-    # Assuming worksheet_id is correct and available
+    # Update remote cell in worksheet (cell XFD1048576 is the last cell in Excel)
     update_url = f"https://graph.microsoft.com/v1.0/me/drive/items/{uploaded_file_id}/workbook/worksheets('{worksheet_id}')/range(address='XFD1048576')"
-    data = json.dumps({ "values": [["Fix"]] })
+    data = json.dumps({"values": [["Fix"]]})
     headers = {"Authorization": "Bearer " + result['access_token'], "Content-Type": "application/json"}
     response = requests.patch(update_url, headers=headers, data=data)
-    data = json.dumps({ "values": [[""]] })
+    # After committing the temp value, we need to clear the cell again
+    data = json.dumps({"values": [[""]]})
+    # noinspection PyRedeclaration
     response = requests.patch(update_url, headers=headers, data=data)
-    #print(f"Cell updated: {response.json()}")
-    print_progress_bar(3, total_steps, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    # print(f"Cell updated: {response.json()}")
+    print_progress_bar(3, total_steps, prefix='Progress:', suffix='Complete', length=50)
 
     # Get the download URL of the file
     download_url = f"https://graph.microsoft.com/v1.0/me/drive/items/{uploaded_file_id}"
+    # noinspection PyRedeclaration
     response = requests.get(download_url, headers=headers)
     download_url = response.json()['@microsoft.graph.downloadUrl']
 
@@ -144,8 +137,8 @@ if "access_token" in result:
     response = requests.get(download_url)
     with open(local_file_path, 'wb') as file:
         file.write(response.content)
-        #print("File downloaded successfully.")
-        print_progress_bar(4, total_steps, prefix = 'Progress:', suffix = 'Complete', length = 50)
+        # print("File downloaded successfully.")
+        print_progress_bar(4, total_steps, prefix='Progress:', suffix='Complete', length=50)
 
 else:
     print(f"Could not obtain an access token. Error: {result.get('error')}, {result.get('error_description')}")
